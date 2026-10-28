@@ -98,6 +98,6 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
   (`blender/vorschau-16x9.mp4`, `vorschau-9x16.mp4`, halbe Größe, ca. 1,6 s je Bild). Tobias: passt, aber die
   ersten Sekunden sind die wichtigsten und noch zu dunkel. **Vor dem finalen Rendern:** Totale heller und
   packender (schnellere Kranfahrt, Tor pulsiert früh auf), neue Standbilder zeigen. Tobias startet das finale
-  Rendern am 29.10.2026 (Erinnerung als Aufgabe #50 in der App „Planung“). → Vorschauvideo in halber Größe →
+  Rendern am 29.10.2026 (Erinnerung als Aufgabe #50 in der App „Planung“). →
   finales Rendern beider Formate (alte Videos vorher nach `assets/alt/`) → auf der Seite prüfen → Tobias
   gibt frei → pushen.
