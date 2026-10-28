@@ -94,7 +94,10 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
 - Idee von Tobias (28.10.2026) für eine spätere Fassung: Ein Ritter in voller Rüstung reitet durch einen Wald
   auf eine Burg zu. Fände er cool. Braucht Pferd und Ritter als gute 3D-Modelle mit Reitanimation (freie
   Lizenz) und einen Wald; deutlich aufwendiger als die jetzige Szene.
-- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigegeben (28.10.2026) → Vorschau läuft
-  (`blender/render.sh 16x9 50 vorschau`, dann 9x16) → Vorschauvideo in halber Größe →
+- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigegeben (28.10.2026) → Vorschau fertig
+  (`blender/vorschau-16x9.mp4`, `vorschau-9x16.mp4`, halbe Größe, ca. 1,6 s je Bild). Tobias: passt, aber die
+  ersten Sekunden sind die wichtigsten und noch zu dunkel. **Vor dem finalen Rendern:** Totale heller und
+  packender (schnellere Kranfahrt, Tor pulsiert früh auf), neue Standbilder zeigen. Tobias startet das finale
+  Rendern am 29.10.2026 (Erinnerung als Aufgabe #50 in der App „Planung“). → Vorschauvideo in halber Größe →
   finales Rendern beider Formate (alte Videos vorher nach `assets/alt/`) → auf der Seite prüfen → Tobias
   gibt frei → pushen.
