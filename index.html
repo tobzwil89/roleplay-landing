@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KI-Rollenspiel, wie es sein sollte</title>
+<meta name="description" content="Die Rollenspiel-App der nächsten Generation. Trag dich in die Warteliste ein.">
+<meta name="theme-color" content="#07060a">
+<meta property="og:title" content="KI-Rollenspiel, wie es sein sollte">
+<meta property="og:description" content="Die Rollenspiel-App der nächsten Generation. Trag dich in die Warteliste ein.">
+<meta property="og:image" content="assets/poster-16x9.jpg">
+<link rel="preload" href="assets/fonts/CormorantGaramond.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* Schriften liegen lokal, damit beim Besuch nichts an Google übertragen wird */
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 300 700; font-style: normal; font-display: swap; src: url(assets/fonts/CormorantGaramond.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 300 700; font-style: italic; font-display: swap; src: url(assets/fonts/CormorantGaramond-italic.woff2) format('woff2'); }
+@font-face { font-family: 'Manrope'; font-weight: 200 800; font-style: normal; font-display: swap; src: url(assets/fonts/Manrope.woff2) format('woff2'); }
+
+:root {
+  --bg: #07060a;
+  --ink: #efe6d8;
+  --muted: #a69c8d;
+  --gold: #e0a961;
+  --gold-deep: #b9783a;
+  --line: rgba(224, 169, 97, 0.28);
+  --glass: rgba(12, 9, 14, 0.5);
+  --serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --gutter: clamp(16px, 6vw, 112px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--ink); font: 400 1rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+button { font: inherit; cursor: pointer; }
+::selection { background: var(--gold); color: var(--bg); }
+
+/* ---------- Bühne mit Video ---------- */
+.hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; isolation: isolate; overflow: hidden; }
+.hero__media { position: absolute; inset: 0; z-index: -2; background: var(--bg) url(assets/poster-16x9.jpg) center / cover no-repeat; }
+.hero__media video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 2.4s ease; }
+.hero__media video.is-playing { opacity: 1; }
+/* Abdunklung: links und unten, damit der Text immer lesbar ist */
+.hero::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7,6,10,.86) 0%, rgba(7,6,10,.55) 34%, rgba(7,6,10,0) 62%),
+    linear-gradient(0deg, var(--bg) 0%, rgba(7,6,10,.55) 18%, rgba(7,6,10,0) 42%),
+    linear-gradient(180deg, rgba(7,6,10,.6) 0%, rgba(7,6,10,0) 18%); }
+/* Filmkorn */
+.hero::after { content: ''; position: absolute; inset: -50%; z-index: -1; pointer-events: none; opacity: .09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1s steps(6) infinite; }
+@keyframes grain { 0%{transform:translate(0,0)} 20%{transform:translate(-4%,3%)} 40%{transform:translate(3%,-5%)} 60%{transform:translate(-6%,-2%)} 80%{transform:translate(5%,4%)} 100%{transform:translate(0,0)} }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: max(20px, env(safe-area-inset-top)) var(--gutter) 0; }
+.mark { display: flex; align-items: center; gap: .7rem; font: 600 .72rem/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.mark svg { width: 22px; height: 22px; color: var(--gold); }
+.lang { display: flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.lang button { border: 0; background: none; color: var(--muted); font: 600 .72rem/1 var(--sans); letter-spacing: .12em; padding: .5rem .8rem; border-radius: 999px; transition: color .3s, background .3s; }
+.lang button[aria-pressed='true'] { background: rgba(224,169,97,.16); color: var(--ink); }
+
+.hero__content { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 var(--gutter) clamp(56px, 13vh, 140px); max-width: calc(40rem + var(--gutter)); }
+.eyebrow { display: flex; align-items: center; gap: .9rem; font: 600 .74rem/1.2 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.6rem; }
+.eyebrow::before { content: ''; width: 2.6rem; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+h1 { font: 500 clamp(3rem, 6.4vw, 5.8rem)/.92 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
+h1 span { white-space: nowrap; }
+h1 em { display: block; font-style: italic; background: linear-gradient(100deg, #f6d9a8 0%, var(--gold) 45%, var(--gold-deep) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .08em; }
+.lede { margin-top: 1.6rem; max-width: 31rem; font-size: clamp(1rem, 1.25vw, 1.12rem); color: #cfc5b5; text-wrap: pretty; }
+
+/* ---------- Anmeldung ---------- */
+.signup { margin-top: 2.2rem; max-width: 30rem; }
+.signup__row { display: flex; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: border-color .3s, box-shadow .3s; }
+.signup__row:focus-within { border-color: rgba(224,169,97,.7); box-shadow: 0 0 0 4px rgba(224,169,97,.12), 0 20px 60px -20px rgba(224,169,97,.35); }
+.signup input[type=email] { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 500 1rem var(--sans); padding: 0 1.1rem; }
+.signup input::placeholder { color: #8a8174; }
+.btn { display: inline-block; text-decoration: none; border: 0; border-radius: 999px; padding: .95rem 1.5rem; white-space: nowrap; font: 600 .95rem/1 var(--sans); color: #1a1008;
+  background: linear-gradient(180deg, #f2c88b, var(--gold) 55%, var(--gold-deep)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 8px 30px -8px rgba(224,169,97,.6); transition: transform .2s, box-shadow .3s, filter .3s; }
+.btn:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 10px 40px -6px rgba(224,169,97,.8); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { filter: grayscale(.4) brightness(.8); cursor: wait; }
+.hp { position: absolute; left: -9999px; }
+.signup__note { margin-top: .9rem; font-size: .8rem; color: var(--muted); line-height: 1.5; }
+.signup__note button { background: none; border: 0; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+.signup__msg { margin-top: .9rem; font-size: .92rem; min-height: 1.4em; }
+.signup__msg[data-state=ok] { color: #f0d2a2; }
+.signup__msg[data-state=error] { color: #f19a8a; }
+.signup.is-done .signup__row { display: none; }
+
+.scroll-cue { position: absolute; right: var(--gutter); bottom: clamp(28px, 6vh, 56px); display: flex; align-items: center; gap: .8rem; font: 600 .68rem/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.scroll-cue span { width: 1px; height: 48px; background: linear-gradient(var(--gold), transparent); animation: cue 2.4s ease-in-out infinite; transform-origin: top; }
+@keyframes cue { 0%{transform:scaleY(0)} 50%{transform:scaleY(1)} 100%{transform:scaleY(1); opacity:0} }
+
+/* ---------- Versprechen ---------- */
+.promises { position: relative; padding: clamp(80px, 14vh, 160px) var(--gutter) clamp(64px, 12vh, 140px); background: radial-gradient(60rem 30rem at 70% 0%, rgba(224,169,97,.07), transparent 70%), var(--bg); }
+.promises h2 { font: 500 clamp(2.1rem, 4.4vw, 3.6rem)/1.02 var(--serif); max-width: 22ch; text-wrap: balance; }
+.promises h2 em { color: var(--gold); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 4vw, 64px); margin-top: clamp(48px, 8vh, 88px); }
+.promise { border-top: 1px solid var(--line); padding-top: 1.6rem; }
+.promise__num { font: italic 500 1.1rem/1 var(--serif); color: var(--gold); }
+.promise h3 { margin-top: 1.1rem; font: 500 1.9rem/1.1 var(--serif); }
+.promise p { margin-top: .8rem; color: var(--muted); max-width: 30ch; }
+.cta { margin-top: clamp(64px, 11vh, 120px); display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem 2rem; }
+.cta p { font: italic 500 clamp(1.6rem, 2.6vw, 2.2rem)/1.15 var(--serif); }
+
+footer { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; justify-content: space-between; padding: 28px var(--gutter) max(28px, env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.06); font-size: .82rem; color: var(--muted); }
+footer nav { display: flex; gap: 1.4rem; }
+footer button { background: none; border: 0; color: var(--muted); font-size: .82rem; }
+footer button:hover { color: var(--ink); }
+
+/* ---------- Rechtliches als Dialog ---------- */
+dialog { margin: auto; width: min(44rem, calc(100% - 32px)); max-height: min(85vh, 52rem); border: 1px solid var(--line); border-radius: 18px; background: #0e0b11; color: var(--ink); padding: 0; }
+dialog::backdrop { background: rgba(4,3,6,.75); backdrop-filter: blur(6px); }
+.dlg__head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: #0e0b11; border-bottom: 1px solid rgba(255,255,255,.06); }
+.dlg__head h2 { font: 500 1.7rem/1 var(--serif); }
+.dlg__close { border: 1px solid var(--line); background: none; color: var(--ink); width: 36px; height: 36px; border-radius: 999px; font-size: 1.1rem; line-height: 1; }
+.dlg__body { padding: 8px 24px 28px; font-size: .92rem; color: #cfc5b5; }
+.dlg__body h3 { margin-top: 1.4rem; font: 600 .95rem var(--sans); color: var(--ink); }
+.dlg__body p { margin-top: .4rem; }
+.dlg__body small { display: block; margin-top: 1.6rem; color: var(--muted); }
+
+/* ---------- Einblenden ---------- */
+.reveal { opacity: 0; transform: translateY(18px); animation: rise 1.4s cubic-bezier(.2,.7,.2,1) forwards; }
+.d1 { animation-delay: .5s } .d2 { animation-delay: .8s } .d3 { animation-delay: 1.15s } .d4 { animation-delay: 1.45s } .d5 { animation-delay: 1.8s }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.on-scroll { opacity: 0; transform: translateY(24px); transition: opacity 1.1s ease, transform 1.1s cubic-bezier(.2,.7,.2,1); }
+.on-scroll.is-in { opacity: 1; transform: none; }
+.grid .on-scroll:nth-child(2) { transition-delay: .12s } .grid .on-scroll:nth-child(3) { transition-delay: .24s }
+
+/* ---------- Hochformat / Handy ---------- */
+@media (orientation: portrait) {
+  .hero__media { background-image: url(assets/poster-9x16.jpg); }
+  .hero::before { background:
+    linear-gradient(0deg, var(--bg) 0%, rgba(7,6,10,.9) 22%, rgba(7,6,10,.35) 46%, rgba(7,6,10,0) 60%),
+    linear-gradient(180deg, rgba(7,6,10,.55) 0%, rgba(7,6,10,0) 16%); }
+  .scroll-cue { display: none; }
+}
+@media (max-width: 760px) {
+  .grid { grid-template-columns: 1fr; }
+  .hero__content { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+  .eyebrow { margin-bottom: 1rem; font-size: .68rem; }
+  h1 { font-size: clamp(2.6rem, 11.5vw, 3.4rem); }
+  .lede { margin-top: 1rem; font-size: .98rem; }
+  .signup { margin-top: 1.5rem; }
+  .signup__msg:empty { display: none; }
+  .signup__row { flex-direction: column; border-radius: 22px; padding: 8px; }
+  .signup input[type=email] { padding: .9rem 1rem; }
+  .btn { width: 100%; padding: 1.05rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero__media video { display: none; }
+  .hero::after, .scroll-cue span { animation: none; }
+  .reveal, .on-scroll { animation: none; opacity: 1; transform: none; transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero__media" aria-hidden="true">
+    <video id="bg" muted loop playsinline preload="auto">
+      <source src="assets/hero-9x16.mp4" type="video/mp4" media="(orientation: portrait)">
+      <source src="assets/hero-16x9.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <div class="topbar reveal">
+    <a class="mark" href="https://tobiaszwilling.me">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 21V10.5C5 6.4 8.1 3 12 3s7 3.4 7 7.5V21"/><path d="M8.5 21v-9c0-2.2 1.6-4 3.5-4s3.5 1.8 3.5 4v9"/><path d="M3 21h18"/></svg>
+      <span data-i18n="mark"></span>
+    </a>
+    <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </div>
+
+  <div class="hero__content">
+    <p class="eyebrow reveal d1" data-i18n="eyebrow"></p>
+    <h1 class="reveal d2"><span data-i18n="h1a"></span><em data-i18n="h1b"></em></h1>
+    <p class="lede reveal d3" data-i18n="lede"></p>
+
+    <form class="signup reveal d4" id="signup" novalidate>
+      <div class="signup__row">
+        <input type="email" name="email" id="email" autocomplete="email" required data-i18n-placeholder="placeholder" aria-label="E-Mail">
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn" type="submit" data-i18n="button"></button>
+      </div>
+      <p class="signup__msg" role="status" aria-live="polite"></p>
+      <p class="signup__note"><span data-i18n="note"></span> <button type="button" data-open="privacy" data-i18n="privacyLink"></button>.</p>
+    </form>
+  </div>
+
+  <a class="scroll-cue reveal d5" href="#mehr"><span></span><b data-i18n="more" style="font-weight:inherit"></b></a>
+</header>
+
+<main class="promises" id="mehr">
+  <h2 class="on-scroll"><span data-i18n="h2a"></span> <em data-i18n="h2b"></em></h2>
+  <div class="grid">
+    <article class="promise on-scroll"><span class="promise__num">I</span><h3 data-i18n="p1t"></h3><p data-i18n="p1"></p></article>
+    <article class="promise on-scroll"><span class="promise__num">II</span><h3 data-i18n="p2t"></h3><p data-i18n="p2"></p></article>
+    <article class="promise on-scroll"><span class="promise__num">III</span><h3 data-i18n="p3t"></h3><p data-i18n="p3"></p></article>
+  </div>
+  <div class="cta on-scroll">
+    <p data-i18n="ctaText"></p>
+    <a class="btn" href="#signup" id="toForm" data-i18n="button"></a>
+  </div>
+</main>
+
+<footer>
+  <span>© 2026 Tobias Zwilling</span>
+  <nav>
+    <button type="button" data-open="imprint" data-i18n="imprint"></button>
+    <button type="button" data-open="privacy" data-i18n="privacy"></button>
+  </nav>
+</footer>
+
+<dialog id="imprint">
+  <div class="dlg__head"><h2 data-i18n="imprint"></h2><button class="dlg__close" type="button" aria-label="Schließen">✕</button></div>
+  <div class="dlg__body">
+    <p data-i18n="imprintBasis"></p>
+    <p style="margin-top:1rem">Tobias Zwilling<br>Flöhbachäcker 23<br>96486 Lautertal<br>Deutschland</p>
+    <p style="margin-top:1rem">E-Mail: tobzwilling@gmx.de</p>
+  </div>
+</dialog>
+
+<dialog id="privacy">
+  <div class="dlg__head"><h2 data-i18n="privacy"></h2><button class="dlg__close" type="button" aria-label="Schließen">✕</button></div>
+  <div class="dlg__body" id="privacyBody"></div>
+</dialog>
+
+<script>
+// ---------- Einstellungen ----------
+// EmailOctopus-Formular (aus dem Einbettungscode). Leer = Formular zeigt "startet in Kürze" und sendet nichts.
+const EO_FORM_ACTION = 'https://eocampaign1.com/form/e6484ed8-d31f-11f1-8421-5bca2d4fa631'
+const EO_EMAIL_FIELD = 'field_0'
+const EO_HONEYPOT_FIELD = 'hpc4b27b6e-eb38-11e9-be00-06b4694bee2a'
+
+// ---------- Texte ----------
+const IMPRINT_LINE = 'Tobias Zwilling, Flöhbachäcker 23, 96486 Lautertal, Deutschland, tobzwilling@gmx.de'
+const TEXT = {
+  de: {
+    title: 'KI-Rollenspiel, wie es sein sollte',
+    mark: 'Frühzugang',
+    eyebrow: 'Eine neue Rollenspiel-App',
+    h1a: 'KI-Rollenspiel,',
+    h1b: 'wie es sein sollte.',
+    lede: 'Die Rollenspiel-App der nächsten Generation: Figuren, die sich erinnern, Geschichten mit Tiefe – und ein Preis, der fair bleibt.',
+    placeholder: 'deine@email.de',
+    button: 'Auf die Warteliste',
+    note: 'Du bekommst eine Mail zur Bestätigung und später Neuigkeiten zum Start. Abmelden geht jederzeit.',
+    privacyLink: 'Datenschutz',
+    more: 'Mehr',
+    h2a: 'Hinter dem Tor wartet',
+    h2b: 'deine Geschichte.',
+    p1t: 'Figuren mit Gedächtnis',
+    p1: 'Deine Figur weiß noch, was vor hundert Nachrichten geschah – und bleibt sich treu.',
+    p2t: 'Welten nach deinen Regeln',
+    p2: 'Eigene Figuren und Welten erschaffen oder vorhandene Figurenkarten einfach mitbringen.',
+    p3t: 'Ein fairer Preis',
+    p3: 'Bezahlbar und klar. Keine versteckten Grenzen, keine Tricks.',
+    ctaText: 'Sei dabei, wenn sich das Tor öffnet.',
+    imprint: 'Impressum',
+    privacy: 'Datenschutz',
+    imprintBasis: 'Angaben gemäß § 5 DDG',
+    sending: 'Einen Moment …',
+    ok: 'Fast geschafft: Bitte bestätige deine Anmeldung über den Link in der Mail, die wir dir gerade geschickt haben.',
+    invalid: 'Bitte gib eine gültige E-Mail-Adresse ein.',
+    error: 'Das hat leider nicht geklappt. Bitte versuch es gleich noch einmal.',
+    soon: 'Die Anmeldung startet in Kürze.',
+    privacyText: [
+      ['Kurz gesagt', 'Keine Cookies, kein Tracking, keine Analyse-Werkzeuge. Die Schriften liegen auf diesem Server, es werden keine Daten an Google übertragen. Deine Sprachwahl wird nur in deinem Browser gespeichert (localStorage).'],
+      ['Verantwortlich', IMPRINT_LINE],
+      ['Hosting', 'Diese Seite liegt auf GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). Beim Aufruf übermittelt dein Browser technische Daten wie deine IP-Adresse an GitHub, die GitHub aus Sicherheitsgründen in Logdateien speichern kann. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.'],
+      ['Warteliste und Neuigkeiten', 'Wenn du dich einträgst, speichern wir deine E-Mail-Adresse, um dich über den Start der App und wichtige Neuigkeiten zu informieren. Dafür nutzen wir EmailOctopus (Three Hearts Digital Ltd, 86-90 Paul Street, London EC2A 4NE, Großbritannien). Die Daten werden auf Servern in der EU (Irland) gespeichert; für Großbritannien hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Wir nutzen das Double-Opt-in-Verfahren: Du bekommst eine Mail mit einem Bestätigungslink und wirst erst nach dem Klick eingetragen. Zum Nachweis speichern wir Zeitpunkt und IP-Adresse von Anmeldung und Bestätigung. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit widerrufen, über den Abmeldelink in jeder Mail oder per Mail an uns. Danach löschen wir deine Adresse.'],
+      ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde.'],
+    ],
+    updated: 'Stand: Oktober 2026',
+  },
+  en: {
+    title: 'AI roleplay, the way it should be',
+    mark: 'Early access',
+    eyebrow: 'A new roleplay app',
+    h1a: 'AI roleplay,',
+    h1b: 'the way it should be.',
+    lede: 'The next-generation roleplay app: characters who remember, stories with depth – and a price that stays fair.',
+    placeholder: 'you@email.com',
+    button: 'Join the waitlist',
+    note: 'You will get an email to confirm, and later news about the launch. Unsubscribe any time.',
+    privacyLink: 'Privacy',
+    more: 'More',
+    h2a: 'Beyond the gate,',
+    h2b: 'your story awaits.',
+    p1t: 'Characters who remember',
+    p1: 'Your character still knows what happened a hundred messages ago – and stays true to itself.',
+    p2t: 'Worlds on your terms',
+    p2: 'Create your own characters and worlds, or simply bring the character cards you already have.',
+    p3t: 'A fair price',
+    p3: 'Affordable and clear. No hidden limits, no tricks.',
+    ctaText: 'Be there when the gate opens.',
+    imprint: 'Legal notice',
+    privacy: 'Privacy',
+    imprintBasis: 'Information according to § 5 DDG (German Digital Services Act)',
+    sending: 'One moment …',
+    ok: 'Almost there: please confirm your sign-up via the link in the email we just sent you.',
+    invalid: 'Please enter a valid email address.',
+    error: 'Something went wrong. Please try again in a moment.',
+    soon: 'Sign-up opens shortly.',
+    privacyText: [
+      ['In short', 'No cookies, no tracking, no analytics. Fonts are served from this site, nothing is sent to Google. Your language choice is stored only in your browser (localStorage).'],
+      ['Who is responsible', IMPRINT_LINE],
+      ['Hosting', 'This site is hosted on GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). When you visit, your browser transmits technical data such as your IP address to GitHub, which may store it in log files for security purposes. Legal basis: Art. 6 (1) (f) GDPR.'],
+      ['Waitlist and news', 'When you sign up, we store your email address to inform you about the launch of the app and important news. We use EmailOctopus (Three Hearts Digital Ltd, 86-90 Paul Street, London EC2A 4NE, United Kingdom) for this. Data is stored on servers in the EU (Ireland); the European Commission has recognised the UK as providing an adequate level of data protection. We use double opt-in: you receive an email with a confirmation link and are only added after clicking it. As proof, we store the time and IP address of sign-up and confirmation. The legal basis is your consent (Art. 6 (1) (a) GDPR). You can withdraw it at any time via the unsubscribe link in every email or by emailing us. We then delete your address.'],
+      ['Your rights', 'You have the right to access, rectification, erasure, restriction, data portability and objection (Art. 15–21 GDPR), and to lodge a complaint with a data protection authority.'],
+    ],
+    updated: 'Last updated: October 2026',
+  },
+}
+
+// ---------- Sprache ----------
+let lang = 'de'
+try { lang = localStorage.getItem('lang') || '' } catch {}
+if (!TEXT[lang]) lang = (navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en'
+
+function applyLang(next) {
+  lang = next
+  const t = TEXT[lang]
+  document.documentElement.lang = lang
+  document.title = t.title
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t[el.dataset.i18n] })
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t[el.dataset.i18nPlaceholder] })
+  document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)))
+  const body = document.getElementById('privacyBody')
+  body.replaceChildren()
+  for (const [h, p] of t.privacyText) {
+    const h3 = document.createElement('h3'); h3.textContent = h
+    const para = document.createElement('p'); para.textContent = p
+    body.append(h3, para)
+  }
+  const small = document.createElement('small'); small.textContent = t.updated
+  body.append(small)
+  try { localStorage.setItem('lang', lang) } catch {}
+}
+document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => applyLang(b.dataset.lang)))
+applyLang(lang)
+
+// ---------- Video erst einblenden, wenn es wirklich läuft ----------
+const video = document.getElementById('bg')
+video.addEventListener('playing', () => video.classList.add('is-playing'), { once: true })
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) video.play().catch(() => {})
+
+// ---------- Anmeldung ----------
+const form = document.getElementById('signup')
+const msg = form.querySelector('.signup__msg')
+const say = (key, state) => { msg.textContent = TEXT[lang][key]; msg.dataset.state = state || '' }
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const email = form.email.value.trim()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return say('invalid', 'error')
+  if (form.website.value) return // Spam-Bot hat das versteckte Feld ausgefüllt
+  if (!EO_FORM_ACTION) return say('soon')
+
+  const button = form.querySelector('button[type=submit]')
+  button.disabled = true
+  say('sending')
+  // EmailOctopus erwartet URL-kodierte Felder, nicht multipart
+  const data = new URLSearchParams({ [EO_EMAIL_FIELD]: email, [EO_HONEYPOT_FIELD]: '' })
+  try {
+    const res = await (await fetch(EO_FORM_ACTION, { method: 'POST', mode: 'cors', cache: 'no-cache', body: data })).json()
+    if (!res.success) throw new Error(res.error?.code || 'unknown')
+    form.classList.add('is-done')
+    say('ok', 'ok')
+  } catch (err) {
+    console.error('Anmeldung fehlgeschlagen:', err.message)
+    say('error', 'error')
+  } finally {
+    button.disabled = false
+  }
+})
+
+document.getElementById('toForm').addEventListener('click', (e) => {
+  e.preventDefault()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  setTimeout(() => document.getElementById('email').focus({ preventScroll: true }), 500)
+})
+
+// ---------- Rechtliches ----------
+document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => document.getElementById(b.dataset.open).showModal()))
+document.querySelectorAll('dialog').forEach((d) => {
+  d.querySelector('.dlg__close').addEventListener('click', () => d.close())
+  d.addEventListener('click', (e) => { if (e.target === d) d.close() })
+})
+
+// ---------- Einblenden beim Scrollen ----------
+const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+  if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target) }
+}), { threshold: 0.2 })
+document.querySelectorAll('.on-scroll').forEach((el) => io.observe(el))
+</script>
+</body>
+</html>

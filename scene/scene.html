@@ -1,0 +1,246 @@
+<!doctype html>
+<!--
+  Hintergrundszene "Das Tor" (dunkle Fantasy), komplett als Fragment-Shader.
+  Alles hängt nur von der Schleifenphase uT (0..1) ab und ist darin periodisch,
+  dadurch läuft das fertige Video als nahtlose Schleife.
+  Ansehen:   scene.html            (läuft live, 12 s pro Schleife)
+  Aufnahme:  scene/render.mjs ruft window.renderAt(t) Bild für Bild auf.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;
+out vec4 outColor;
+
+#define TAU 6.28318530718
+const vec2 L = vec2(0.0, 0.03);          // Lichtquelle hinter dem Tor
+const vec3 WARM = vec3(1.0, 0.62, 0.28);
+const vec3 COLD = vec3(0.10, 0.13, 0.24);
+
+float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float hash1(float n) { return fract(sin(n * 127.1) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+float fbm(vec2 p, int oct) {
+  float s = 0.0, a = 0.5;
+  for (int i = 0; i < 6; i++) { if (i >= oct) break; s += a * noise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+  return s;
+}
+// Nebel, der gleichmäßig in Richtung v treibt und trotzdem nach einer Schleife identisch ist:
+// zwei versetzte Felder werden über die Phase überblendet, der Kontrastverlust wird ausgeglichen.
+float driftFbm(vec2 p, vec2 v, int oct) {
+  float a = fbm(p + v * uT, oct), b = fbm(p + v * (uT - 1.0), oct);
+  float m = mix(a, b, uT) - 0.5;
+  return m / sqrt(uT * uT + (1.0 - uT) * (1.0 - uT)) + 0.5;
+}
+
+// Spitzbogen: Rechteck bis Höhe h, darüber zwei Kreise (Radius 2w + t)
+float arch(vec2 p, float w, float h, float b, float t) {
+  if (p.y > h) return max(length(p - vec2(w, h)), length(p - vec2(-w, h))) - (2.0 * w + t);
+  vec2 d = vec2(abs(p.x) - (w + t), max(b - p.y, -1.0));
+  return max(d.x, d.y);
+}
+const float GW = 0.075, GH = 0.10, GB = -0.12, GT = 0.04;
+float opening(vec2 p) { return arch(p, GW, GH, GB, 0.0); }
+
+float lightFlicker() {
+  return 1.0 + 0.06 * sin(TAU * 3.0 * uT) + 0.04 * sin(TAU * 7.0 * uT + 1.3) + 0.03 * sin(TAU * 13.0 * uT + 0.5);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  // Hochformat: Szene etwas größer zeigen, damit das Tor das Bild trägt
+  // Hochformat: Szene kleiner, damit unten Platz für den Text bleibt
+  float zoom = uRes.x < uRes.y ? 0.8 : 1.0;
+  // leichtes "Atmen" der Kamera
+  // Hochformat: Szene nach oben schieben, unten bleibt Platz für Text.
+  // Querformat: Tor nach rechts, links steht der Text.
+  if (uRes.x < uRes.y) uv.y -= 0.2; else uv.x -= 0.2;
+  vec2 p = uv / (zoom * (1.0 + 0.012 * sin(TAU * uT))) + vec2(0.004 * sin(TAU * uT + 1.0), 0.0);
+  float fl = lightFlicker();
+  float dl = length(p - L);
+
+  // Himmel mit Wolken, von unten durch das Tor angestrahlt
+  vec3 col = mix(vec3(0.012, 0.014, 0.028), vec3(0.035, 0.030, 0.055), smoothstep(-0.2, 0.5, p.y));
+  float cl = driftFbm(p * vec2(2.2, 4.0) + vec2(0.0, 3.0), vec2(0.6, 0.0), 5);
+  float cloudMask = smoothstep(0.35, 0.8, cl) * smoothstep(-0.05, 0.25, p.y);
+  col += cloudMask * (COLD * 0.10 + WARM * 0.16 * exp(-dl * 4.5) * fl);
+  // ein paar Sterne in den Wolkenlücken
+  vec2 sg = floor(p * 160.0);
+  vec2 sf = fract(p * 160.0) - 0.5 - 0.3 * (vec2(hash(sg + 1.0), hash(sg + 2.0)) - 0.5);
+  float star = step(0.993, hash(sg)) * smoothstep(0.12, 0.0, length(sf)) * (1.0 - cloudMask) * smoothstep(0.05, 0.3, p.y);
+  col += star * vec3(0.6, 0.65, 0.8) * (0.5 + 0.5 * sin(TAU * (uT * 2.0 + hash(sg + 3.0))));
+
+  // ferne Berge im Dunst
+  float ridge = -0.04 + 0.13 * fbm(vec2(p.x * 2.2, 1.3), 5) - 0.05 * smoothstep(0.0, 0.25, 0.25 - abs(p.x));
+  float mtn = smoothstep(0.002, -0.002, p.y - ridge);
+  col = mix(col, vec3(0.022, 0.024, 0.042) + WARM * 0.06 * exp(-dl * 4.0) * fl, mtn);
+
+  // Ruinenmauern links und rechts, blockig gebrochen
+  float bx = floor(p.x * 14.0);
+  float wallTop = -0.17 + 0.11 * floor(noise(vec2(bx * 0.37, 2.0)) * 5.0) / 5.0 * smoothstep(0.17, 0.35, abs(p.x));
+  float wall = smoothstep(0.002, -0.002, p.y - wallTop) * step(0.16, abs(p.x)) * step(-0.17, p.y);
+  // zwei gebrochene Säulen je Seite
+  for (int i = 0; i < 4; i++) {
+    float sx = (i < 2 ? -1.0 : 1.0) * (i % 2 == 0 ? 0.34 : 0.58);
+    float sh = 0.10 + 0.14 * hash1(float(i) + 4.0);
+    vec2 q = p - vec2(sx, -0.17);
+    float top = sh + 0.02 * sin(q.x * 180.0) * hash1(float(i));
+    wall = max(wall, step(abs(q.x), 0.022) * step(q.y, top) * step(0.0, q.y));
+  }
+  vec3 wallCol = vec3(0.018, 0.018, 0.026) + WARM * 0.05 * exp(-abs(p.x) * 4.0) * fl;
+  col = mix(col, wallCol * (0.7 + 0.6 * fbm(p * 40.0, 3)), wall);
+
+  // Boden und Stufen
+  float ground = step(p.y, -0.17);
+  vec3 groundCol = vec3(0.02, 0.02, 0.03) + WARM * 0.22 * exp(-abs(p.x) * 7.0) * exp(-(-0.17 - p.y) * 9.0) * fl;
+  groundCol *= 0.7 + 0.5 * fbm(p * vec2(30.0, 90.0), 3);
+  col = mix(col, groundCol, ground);
+  for (int k = 0; k < 4; k++) {
+    float top = GB - float(k) * 0.0125;
+    float half_ = GW + GT + 0.035 + float(k) * 0.03;
+    float inStep = step(abs(p.x), half_) * step(p.y, top) * step(top - 0.0125, p.y);
+    float edge = smoothstep(0.0025, 0.0, top - p.y);
+    vec3 stepCol = vec3(0.025, 0.024, 0.03) + WARM * (0.12 + 0.5 * edge) * exp(-abs(p.x) * 9.0) * fl;
+    col = mix(col, stepCol, inStep);
+  }
+
+  // Tor: Rahmen, Strebepfeiler, Licht im Durchgang
+  float dIn = opening(p);
+  float dOut = arch(p, GW, GH, GB, GT);
+  float inside = smoothstep(0.0015, -0.0015, dIn);
+  float frame = smoothstep(0.0015, -0.0015, dOut) * (1.0 - inside);
+  float butt = step(GW + GT, abs(p.x)) * step(abs(p.x), GW + GT + 0.028) * step(GB, p.y) * step(p.y, GH + 0.05 - (abs(p.x) - GW - GT) * 1.4);
+  vec2 sw = p - L;
+  float swirl = driftFbm(sw * vec2(9.0, 5.0) + vec2(0.0, 2.0 * sin(TAU * uT) * 0.2), vec2(0.0, 1.2), 5);
+  vec3 gateLight = WARM * (0.25 + 1.5 * swirl * swirl) * fl + vec3(1.0, 0.85, 0.6) * exp(-dl * 18.0) * 1.1;
+  col = mix(col, gateLight, inside);
+  float rim = exp(-max(dIn, 0.0) * 300.0);
+  vec3 stone = vec3(0.018, 0.017, 0.022) * (0.6 + 0.8 * fbm(p * vec2(60.0, 30.0), 4));
+  // Fugen der Steinblöcke
+  float joints = smoothstep(0.08, 0.0, abs(fract(p.y * 55.0) - 0.5) - 0.42);
+  stone *= 1.0 - 0.5 * joints;
+  vec3 frameCol = stone + WARM * (0.7 * rim + 0.015) * fl;
+  float solid = max(frame, butt * (1.0 - inside));
+  col = mix(col, frameCol, solid);
+  // Runen auf den Strebepfeilern, Puls wandert nach oben
+  if (butt > 0.5) {
+    float cell = floor((p.y - GB) / 0.018);
+    vec2 f = vec2(fract((abs(p.x) - GW - GT) / 0.028), fract((p.y - GB) / 0.018));
+    float glyph = step(0.45, hash(vec2(cell, sign(p.x)))) * step(abs(f.x - 0.5), 0.05 + 0.14 * step(0.6, hash(vec2(cell, 7.0)))) * step(abs(f.y - 0.5), 0.05 + 0.12 * step(0.5, hash(vec2(cell, 3.0))));
+    float pulse = pow(0.5 + 0.5 * sin(TAU * (uT * 2.0 - cell * 0.06)), 6.0);
+    col += glyph * WARM * vec3(1.0, 0.7, 0.45) * (0.03 + 0.5 * pulse) * fl;
+  }
+
+  // Lichtstrahlen: vom Bildpunkt Richtung Licht laufen und zählen, wie oft der Durchgang getroffen wird
+  float ray = 0.0;
+  const int N = 40;
+  float jit = hash(gl_FragCoord.xy + uT * 17.0);
+  for (int i = 0; i < N; i++) {
+    vec2 q = mix(p, L, (float(i) + jit) / float(N));
+    ray += step(opening(q), 0.0);
+  }
+  ray /= float(N);
+  float ang = atan(sw.y, sw.x);
+  float shafts = 0.45 + 0.9 * noise(vec2(ang * 7.0 + 0.7 * cos(TAU * uT), 0.7 * sin(TAU * uT)));
+  col += (1.0 - inside) * (1.0 - solid) * (1.0 - wall) * WARM * ray * shafts * 0.22 * exp(-dl * 2.2) * fl;
+
+  // Wanderer im Umhang mit Stab vor dem Tor, Gegenlicht, Schatten fällt nach vorn
+  vec2 B = vec2(0.0, -0.2);
+  float h = 0.065;
+  vec2 q = (p - B) / h;
+  float flutter = 0.02 * sin(TAU * uT * 2.0 + q.y * 6.0) * (1.0 - q.y);
+  float cloak = step(0.0, q.y) * step(q.y, 0.8) * step(abs(q.x - flutter), mix(0.24, 0.1, q.y / 0.8));
+  float hood = step(length((q - vec2(0.0, 0.86)) * vec2(1.0, 0.85)), 0.12);
+  float staff = step(abs(q.x - 0.3), 0.018) * step(0.0, q.y) * step(q.y, 1.18);
+  float figure = max(max(cloak, hood), staff);
+  float shadow = step(p.y, B.y) * smoothstep(0.012 + (B.y - p.y) * 0.12, 0.0, abs(p.x)) * smoothstep(-0.5, B.y, p.y);
+  col *= 1.0 - 0.7 * shadow;
+  col = mix(col, vec3(0.006, 0.005, 0.008), figure);
+
+  // Bodennebel, treibt langsam nach rechts
+  float fog = driftFbm(p * vec2(2.5, 7.0), vec2(1.0, 0.0), 5);
+  float fogMask = smoothstep(-0.02, -0.26, p.y) * smoothstep(0.3, 0.75, fog);
+  float fogHigh = smoothstep(0.1, -0.12, p.y) * smoothstep(0.45, 0.8, driftFbm(p * vec2(1.6, 3.5) + 7.0, vec2(-0.6, 0.0), 4));
+  vec3 fogCol = COLD * 0.28 + WARM * 0.32 * exp(-length((p - vec2(0.0, -0.17)) * vec2(1.0, 2.2)) * 3.0) * fl;
+  col = mix(col, fogCol, fogMask * 0.6 + fogHigh * 0.22);
+
+  // Glut: steigt auf, pendelt, flackert (ganzzahlige Frequenzen -> nahtlose Schleife)
+  for (int i = 0; i < 70; i++) {
+    float s = float(i);
+    float k = 1.0 + floor(hash1(s) * 2.0);
+    float y = -0.6 + fract(hash1(s + 1.3) + uT * k) * 1.25;
+    float x = (hash1(s + 2.1) - 0.5) * 0.9 * (0.35 + y + 0.6) + 0.025 * sin(TAU * (uT * k * 2.0 + hash1(s + 5.0)));
+    float size = mix(0.0012, 0.0045, pow(hash1(s + 3.7), 3.0));
+    float d = length(p - vec2(x, y));
+    float tw = 0.6 + 0.4 * sin(TAU * (uT * (3.0 + floor(hash1(s + 9.0) * 4.0)) + hash1(s)));
+    float fade = smoothstep(0.6, 0.1, y) * smoothstep(-0.6, -0.45, y);
+    col += WARM * vec3(1.0, 0.75, 0.5) * (size * size / (d * d + size * size * 0.3)) * tw * fade * 0.9;
+  }
+
+  // Leuchten um die Lichtquelle (Bloom-Ersatz)
+  col += WARM * 0.05 * exp(-dl * 6.0) * fl + vec3(1.0, 0.8, 0.6) * 0.04 * exp(-dl * 14.0);
+
+  // Vignette, Tonemapping, Farbstimmung
+  col *= 1.0 - 0.55 * smoothstep(0.35, 1.0, length(uv * vec2(0.8, 1.15)));
+  col = col * (2.51 * col + 0.03) / (col * (2.43 * col + 0.59) + 0.14);
+  col = pow(col, vec3(0.92, 0.96, 1.02));
+  outColor = vec4(pow(clamp(col, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
+}
+</script>
+<script>
+const LOOP_SECONDS = 12
+const canvas = document.getElementById('c')
+const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false })
+const vs = `#version 300 es
+in vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`
+function compile(type, src) {
+  const s = gl.createShader(type)
+  gl.shaderSource(s, src)
+  gl.compileShader(s)
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s))
+  return s
+}
+const prog = gl.createProgram()
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs))
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, document.getElementById('fs').textContent))
+gl.linkProgram(prog)
+gl.useProgram(prog)
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+gl.enableVertexAttribArray(0)
+gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+const uRes = gl.getUniformLocation(prog, 'uRes')
+const uT = gl.getUniformLocation(prog, 'uT')
+
+function resize() {
+  canvas.width = Math.round(innerWidth * devicePixelRatio)
+  canvas.height = Math.round(innerHeight * devicePixelRatio)
+  gl.viewport(0, 0, canvas.width, canvas.height)
+}
+// Zeichnet die Phase t (0..1). Für die Aufnahme von außen aufrufbar.
+window.renderAt = (t) => {
+  gl.uniform2f(uRes, canvas.width, canvas.height)
+  gl.uniform1f(uT, t)
+  gl.drawArrays(gl.TRIANGLES, 0, 3)
+  gl.finish()
+}
+resize()
+addEventListener('resize', resize)
+if (!location.search.includes('capture')) {
+  const loop = (ms) => { window.renderAt((ms / 1000 / LOOP_SECONDS) % 1); requestAnimationFrame(loop) }
+  requestAnimationFrame(loop)
+}
+</script>
+</body>
+</html>
