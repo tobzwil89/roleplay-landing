@@ -91,6 +91,10 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
 
 - Anmeldung mit eingeschaltetem Doppel-Opt-in testen: kommt die Bestätigungsmail, steht die Adresse bis zum
   Klick auf „Pending“?
-- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigeben lassen → Vorschauvideo in halber Größe →
+- Idee von Tobias (28.10.2026) für eine spätere Fassung: Ein Ritter in voller Rüstung reitet durch einen Wald
+  auf eine Burg zu. Fände er cool. Braucht Pferd und Ritter als gute 3D-Modelle mit Reitanimation (freie
+  Lizenz) und einen Wald; deutlich aufwendiger als die jetzige Szene.
+- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigegeben (28.10.2026) → Vorschau läuft
+  (`blender/render.sh 16x9 50 vorschau`, dann 9x16) → Vorschauvideo in halber Größe →
   finales Rendern beider Formate (alte Videos vorher nach `assets/alt/`) → auf der Seite prüfen → Tobias
   gibt frei → pushen.
