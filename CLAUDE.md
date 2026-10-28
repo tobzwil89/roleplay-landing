@@ -1,7 +1,8 @@
 # Projekt: Roleplay-Warteliste (Einstiegsseite)
 
-Filmische Einstiegsseite mit Warteliste für die Rollenspiel-App (`../roleplay`). Soll unter
-`roleplay.tobiaszwilling.me` laufen und im Desktop (`../tobiaszwilling-desktop`) mit `embed: false` verlinkt werden.
+Filmische Einstiegsseite mit Warteliste für die Rollenspiel-App (`../roleplay`). **Live** unter
+https://roleplay.tobiaszwilling.me (GitHub Pages, Repo `tobzwil89/roleplay-landing`, jeder Push auf `main` geht live).
+Im Desktop (`../tobiaszwilling-desktop`) mit `embed: false` verlinkt, öffnet im neuen Tab.
 
 ## Aufbau
 
@@ -13,6 +14,40 @@ Filmische Einstiegsseite mit Warteliste für die Rollenspiel-App (`../roleplay`)
 - `scene/render.mjs` – nimmt die Szene Bild für Bild auf und baut Videos und Standbilder
   (`node scene/render.mjs`, Probe-Standbilder: `node scene/render.mjs still`). Braucht ffmpeg und Playwright
   aus `../tunnel-front/node_modules`.
+
+## Das Hintergrundvideo: wie es gemacht ist
+
+Komplett aus Code, keine KI-Videos, keine fremden Bilder:
+
+1. **Szene als Fragment-Shader** (`scene/scene.html`, reines WebGL2, keine Bibliothek). Jeder Bildpunkt wird
+   berechnet: Himmel mit Wolken und Sternen, Berge, Ruinen, Spitzbogen-Tor (zwei Kreise + Rechteck), Stufen,
+   Wanderer mit Stab und Schatten, Bodennebel (Rauschen „fbm“), Lichtstrahlen (vom Bildpunkt zur Lichtquelle
+   laufen und zählen, wie oft der Durchgang getroffen wird), 70 Glutfunken, Runen-Puls, Tonemapping.
+2. **Nahtlose Schleife:** Alles hängt nur von der Phase `uT` (0–1) ab. Bewegungen nutzen ganzzahlige
+   Frequenzen; treibender Nebel überblendet zwei versetzte Rauschfelder. Nach 12 s ist das Bild wieder identisch.
+3. **Aufnahme:** `scene/render.mjs` öffnet die Szene in Playwright (Chromium), ruft `renderAt(t)` für jedes der
+   360 Bilder auf, macht Screenshots, ffmpeg baut daraus H.264-MP4 (CRF 27, ca. 1 MB je Format).
+4. **Zwei Formate:** Querformat (Tor rechts, Text links) und Hochformat (Szene kleiner und höher, Text unten).
+   Die Seite wählt per `<source media="(orientation: portrait)">`. Filmkorn kommt per CSS, nicht im Video
+   (spart Dateigröße).
+
+### Wunsch für später: viel filmischer („wie ein kurzer Actionfilm-Ausschnitt“)
+
+Tobias' Rückmeldung am 28.10.2026: „ist gut für jetzt“, soll aber deutlich cineastischer werden.
+Das aktuelle Video ist ein ruhiges Standbild mit Bewegung, ohne Schnitte und echte Kamerafahrt; die
+Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
+
+- **Echtes 3D statt 2D-Shader:** Blender (Open Source) mit freien Modellen (Poly Haven, Quaternius, Kenney, CC0)
+  oder Three.js. Erst damit gibt es Tiefe, Licht auf Oberflächen, Perspektive bei Kamerafahrten.
+  Wahrscheinlich der größte Sprung. Blender rendert offline, Ergebnis wieder als MP4.
+- **Schnitte und Kamera:** 3–4 Einstellungen in 12–15 s (Totale → Fahrt auf das Tor → Nah auf den Wanderer →
+  Lichtausbruch), Kameraschwenks, leichtes Wackeln, Zeitlupe.
+- **Kinoeffekte:** Bewegungsunschärfe, Tiefenunschärfe, Linsenreflexe, Breitbild-Balken, stärkere Farbgebung,
+  Blitze/Funkenregen, Staub im Gegenlicht.
+- **Handlung:** z. B. das Tor öffnet sich, Licht flutet heraus, Figur tritt hindurch.
+- Schleife ist dann schwerer: entweder Schnitt zurück auf die erste Einstellung oder Video nur einmal abspielen
+  und auf dem letzten Bild stehen bleiben.
+- Bisher ausgeschlossen auf Tobias' Wunsch: KI-Videogeneratoren (Higgsfield) und Stockvideos.
 
 ## Entscheidungen
 
@@ -38,11 +73,13 @@ Filmische Einstiegsseite mit Warteliste für die Rollenspiel-App (`../roleplay`)
   aus deren Datenschutzerklärung von 2020). Verbindung geprüft: Anfrage kommt an, EmailOctopus antwortet mit
   INVALID_PARAMETERS für eine example.com-Testadresse. Unklar, ob wegen der Adresse oder weil reCAPTCHA verlangt wird.
 - 28.10.2026: Testanmeldung mit tobitobbs@gmail.com über die Seite erfolgreich (EmailOctopus: success).
-  Der frühere Fehler lag an der example.com-Adresse. Git-Repo lokal angelegt (1 Commit), CNAME-Datei für
-  roleplay.tobiaszwilling.me. Hochladen auf GitHub wartet auf Tobias' Freigabe.
+  Der frühere Fehler lag an der example.com-Adresse. Doppel-Opt-in war in EmailOctopus aus, Tobias hat es
+  eingeschaltet.
+- 28.10.2026: Repo auf GitHub (Tobias hat es angelegt, weil das Anlegen für Claude gesperrt war), Pages und
+  DNS laufen, Seite live. Desktop-Eintrag committet und gepusht, Klick öffnet neuen Tab (geprüft).
 
 ## Offen
 
-- Prüfen, ob die Bestätigungsmail ankam und der Link funktioniert.
-- Repository `tobzwil89/roleplay-landing` anlegen, GitHub Pages, Subdomain `roleplay.` (CNAME-Eintrag beim Domainanbieter).
-- Desktop: `apps.json`-Änderung committen und pushen (erst wenn die Seite live ist).
+- Anmeldung mit eingeschaltetem Doppel-Opt-in testen: kommt die Bestätigungsmail, steht die Adresse bis zum
+  Klick auf „Pending“?
+- Video filmischer machen (siehe „Wunsch für später“).
