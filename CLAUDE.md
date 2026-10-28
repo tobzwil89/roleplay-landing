@@ -37,10 +37,12 @@ Filmische Einstiegsseite mit Warteliste für die Rollenspiel-App (`../roleplay`)
 - 28.10.2026: Umstieg Brevo → EmailOctopus, Datenschutztext angepasst (Three Hearts Digital Ltd, London; Adresse
   aus deren Datenschutzerklärung von 2020). Verbindung geprüft: Anfrage kommt an, EmailOctopus antwortet mit
   INVALID_PARAMETERS für eine example.com-Testadresse. Unklar, ob wegen der Adresse oder weil reCAPTCHA verlangt wird.
+- 28.10.2026: Testanmeldung mit tobitobbs@gmail.com über die Seite erfolgreich (EmailOctopus: success).
+  Der frühere Fehler lag an der example.com-Adresse. Git-Repo lokal angelegt (1 Commit), CNAME-Datei für
+  roleplay.tobiaszwilling.me. Hochladen auf GitHub wartet auf Tobias' Freigabe.
 
 ## Offen
 
-- EmailOctopus: reCAPTCHA im Formular ausschalten, Doppel-Opt-in prüfen, dann Testanmeldung mit echter Adresse.
-  Falls reCAPTCHA sich nicht abschalten lässt: neu entscheiden (reCAPTCHA = Google, bräuchte Einwilligung).
+- Prüfen, ob die Bestätigungsmail ankam und der Link funktioniert.
 - Repository `tobzwil89/roleplay-landing` anlegen, GitHub Pages, Subdomain `roleplay.` (CNAME-Eintrag beim Domainanbieter).
-- Eintrag in `../tobiaszwilling-desktop/src/apps.json` mit `embed: false`.
+- Desktop: `apps.json`-Änderung committen und pushen (erst wenn die Seite live ist).
