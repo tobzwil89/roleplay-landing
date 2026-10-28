@@ -82,4 +82,4 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
 
 - Anmeldung mit eingeschaltetem Doppel-Opt-in testen: kommt die Bestätigungsmail, steht die Adresse bis zum
   Klick auf „Pending“?
-- Video filmischer machen (siehe „Wunsch für später“).
+- Video filmischer machen mit Blender: Auftrag für einen neuen Chat steht in `BLENDER_AUFTRAG.md` (28.10.2026).
