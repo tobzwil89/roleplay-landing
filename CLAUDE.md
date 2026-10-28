@@ -11,6 +11,7 @@ Im Desktop (`../tobiaszwilling-desktop`) mit `embed: false` verlinkt, öffnet im
 - `assets/poster-*.jpg` – Standbilder (Ersatz bei „Bewegung reduzieren“ und solange das Video lädt).
 - `assets/fonts/` – Cormorant Garamond und Manrope (OFL), lokal statt von Google (Datenschutz).
 - `scene/scene.html` – die Szene „Das Tor“ als WebGL-Shader, live im Browser ansehbar.
+- `blender/scene.py` – neue Szene „Das Tor erwacht“ in Blender (siehe Kopf des Skripts für den Aufruf).
 - `scene/render.mjs` – nimmt die Szene Bild für Bild auf und baut Videos und Standbilder
   (`node scene/render.mjs`, Probe-Standbilder: `node scene/render.mjs still`). Braucht ffmpeg und Playwright
   aus `../tunnel-front/node_modules`.
@@ -78,8 +79,18 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
 - 28.10.2026: Repo auf GitHub (Tobias hat es angelegt, weil das Anlegen für Claude gesperrt war), Pages und
   DNS laufen, Seite live. Desktop-Eintrag committet und gepusht, Klick öffnet neuen Tab (geprüft).
 
+- 28.10.2026: Blender 5.2.3 installiert (/Applications/Blender.app, 907 MB, steht im Installationsprotokoll).
+  Tobias wählt Variante A „Das Tor erwacht“ (Totale → Fahrt → Nah über die Schulter → Lichtausbruch, 13 s) und
+  einen harten Schnitt vom Ende zurück zum Anfang. Szene komplett aus Code in `blender/scene.py` (keine fremden
+  Modelle, siehe `CREDITS.md`). Standbilder je Einstellung gerendert (`blender/stills/quer.jpg`, `hoch.jpg`),
+  ca. 6 s je Bild in voller Größe. Wartet auf Tobias' Rückmeldung zu den Standbildern.
+  Gelernt: Grundkörper müssen nach außen zeigende Flächen haben, sonst schneidet das Boolean die Toröffnung
+  nicht aus. Tiefenunschärfe braucht längeres Objektiv und nahes Vordergrundmotiv, sonst kaum sichtbar.
+
 ## Offen
 
 - Anmeldung mit eingeschaltetem Doppel-Opt-in testen: kommt die Bestätigungsmail, steht die Adresse bis zum
   Klick auf „Pending“?
-- Video filmischer machen mit Blender: Auftrag für einen neuen Chat steht in `BLENDER_AUFTRAG.md` (28.10.2026).
+- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigeben lassen → Vorschauvideo in halber Größe →
+  finales Rendern beider Formate (alte Videos vorher nach `assets/alt/`) → auf der Seite prüfen → Tobias
+  gibt frei → pushen.
