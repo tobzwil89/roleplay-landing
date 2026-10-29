@@ -86,6 +86,19 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
   ca. 6 s je Bild in voller Größe. Wartet auf Tobias' Rückmeldung zu den Standbildern.
   Gelernt: Grundkörper müssen nach außen zeigende Flächen haben, sonst schneidet das Boolean die Toröffnung
   nicht aus. Tiefenunschärfe braucht längeres Objektiv und nahes Vordergrundmotiv, sonst kaum sichtbar.
+- 29.10.2026: Anfang heller und packender (Zweig `worktree-anfang-heller`): schnellere Kranfahrt in der Totale
+  (tief und weit → hoch und 20 m näher), zwei „Herzschläge“ des Tors (Bild 18 und 58: Runen, Türspalt,
+  Lichtkegel und neues Licht „Torglut“ vor dem Tor), Belichtung je Einstellung (Totale +0,7, Fahrt +0,3, ab Nah
+  wie bisher; Sprünge auf den Schnitten). Mittlere Helligkeit Totale 28 → 45, Herzschläge 70/73, Finale ~100
+  unverändert. Einstellungen 3 und 4 unverändert (nachgemessen). Probebilder: `blender/stills/neu-16x9/`,
+  `neu-9x16/`. Gelernt: Puls nur an Runen ist aus der Totale unsichtbar, erst Licht in den Nebel wirkt;
+  zu starker Puls macht alles milchig und nimmt dem Finale die Wirkung.
+- 29.10.2026: SheepIt (kostenlose Gemeinschafts-Renderfarm, wie AI Horde) angeschaut. Hat Blender 5.2, eigene
+  Python-Skripte verboten (für uns egal: `scene.py --save` schreibt eine fertige .blend ohne Skriptbedarf).
+  EEVEE-Unterstützung unklar. Hürde: Hochladen erst, nachdem der eigene Rechner 10 Bilder für andere
+  gerendert hat (Client nötig). Für dieses Video nicht lohnend (lokal ca. 2 h), Tobias rendert über Nacht lokal.
+  Testdatei (alter Stand, 30 Bilder, volle Größe) liegt im Hauptordner unter `blender/sheepit-test-16x9.blend`,
+  lokales Vergleichsbild `blender/frames/sheepit-referenz/0015.png` (9,5 s je Bild in voller Größe).
 
 ## Offen
 
@@ -93,11 +106,13 @@ Formen sind flach (2D-Silhouetten). Ideen, grob nach Wirkung:
   Klick auf „Pending“?
 - Idee von Tobias (28.10.2026) für eine spätere Fassung: Ein Ritter in voller Rüstung reitet durch einen Wald
   auf eine Burg zu. Fände er cool. Braucht Pferd und Ritter als gute 3D-Modelle mit Reitanimation (freie
-  Lizenz) und einen Wald; deutlich aufwendiger als die jetzige Szene.
-- Blender-Video (`BLENDER_AUFTRAG.md`): Standbilder freigegeben (28.10.2026) → Vorschau fertig
-  (`blender/vorschau-16x9.mp4`, `vorschau-9x16.mp4`, halbe Größe, ca. 1,6 s je Bild). Tobias: passt, aber die
-  ersten Sekunden sind die wichtigsten und noch zu dunkel. **Vor dem finalen Rendern:** Totale heller und
-  packender (schnellere Kranfahrt, Tor pulsiert früh auf), neue Standbilder zeigen. Tobias startet das finale
-  Rendern am 29.10.2026 (Erinnerung als Aufgabe #50 in der App „Planung“). →
-  finales Rendern beider Formate (alte Videos vorher nach `assets/alt/`) → auf der Seite prüfen → Tobias
-  gibt frei → pushen.
+  Lizenz) und einen Wald; deutlich aufwendiger als die jetzige Szene. **Dafür SheepIt nutzen** (lokal würde
+  das Stunden dauern): vorher 10 Bilder mit dem SheepIt-Client für andere rendern (GPU/Metal, Kerne und RAM
+  begrenzen, kurze maximale Renderzeit), dann mit der 30-Bilder-Testdatei prüfen, ob EEVEE dort läuft;
+  sonst die Szene für Cycles auslegen. Aufgabe in der App „Planung“.
+- Blender-Video (`BLENDER_AUFTRAG.md`, Aufgabe #50): Anfang heller gemacht (29.10.2026, siehe Verlauf),
+  wartet auf Tobias' Blick auf die neuen Probebilder. Dann finales Rendern über Nacht, lokal, aus der
+  Arbeitskopie `.claude/worktrees/anfang-heller`:
+  `caffeinate -i nice -n 19 zsh -c 'blender/render.sh 16x9 100 final && blender/render.sh 9x16 100 final'`
+  (ca. 2 h, abbrechbar und fortsetzbar). → alte Videos nach `assets/alt/`, neue als `assets/hero-*.mp4`
+  (je höchstens ca. 3 MB) und Standbilder als `poster-*.jpg` → auf der Seite prüfen → Tobias gibt frei → pushen.

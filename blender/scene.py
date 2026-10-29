@@ -505,10 +505,21 @@ def anim_value(socket_owner, attr, frames_values, data_path=None):
         setattr(socket_owner, attr, v)
         socket_owner.keyframe_insert(attr if data_path is None else data_path, frame=f)
 
-anim_value(RUNE, 'default_value', [(1, 0.6), (210, 0.6), (250, 8), (285, 14), (300, 40), (330, 5)])
-anim_value(gate_spot, 'energy', [(1, 6000), (240, 6000), (285, 15000), (292, 15000), (305, 50000), (390, 40000)])
+# In der Totale zwei Herzschläge (Bild 18 und 58), damit der Anfang sofort packt
+anim_value(RUNE, 'default_value', [(1, 2), (18, 18), (34, 2), (58, 22), (76, 3), (100, 0.6), (210, 0.6), (250, 8),
+                                   (285, 14), (300, 40), (330, 5)])
+anim_value(gate_spot, 'energy', [(1, 8000), (18, 30000), (34, 8000), (58, 36000), (76, 8000), (100, 6000), (240, 6000),
+                                 (285, 15000), (292, 15000), (305, 50000), (390, 40000)])
 anim_value(portal_m.node_tree.nodes['Principled BSDF'].inputs['Emission Strength'], 'default_value',
-           [(1, 4), (285, 12), (292, 12), (308, 120), (390, 100)])
+           [(1, 6), (18, 40), (34, 6), (58, 50), (76, 6), (100, 4), (285, 12), (292, 12), (308, 120), (390, 100)])
+# Glut vor dem Tor: flammt bei den Herzschlägen auf und färbt Säulen und Nebel golden (nur am Anfang)
+glow = bpy.data.lights.new('Torglut', 'POINT')
+glow.color = GOLD
+glow.shadow_soft_size = 1.5
+gl_o = link(bpy.data.objects.new('Torglut', glow))
+gl_o.location = (0, -3, PLAT + 3)
+anim_value(glow, 'energy', [(1, 3000), (18, 60000), (34, 3000), (58, 35000), (76, 3000), (100, 0)])
+
 OPEN = math.radians(78)
 for door, sign in ((door_l, -1), (door_r, 1)):
     key(door, 'rotation_euler', [(1, (0, 0, 0)), (293, (0, 0, 0)), (322, (0, 0, -sign * OPEN)),
@@ -736,8 +747,9 @@ def shake(obj, f0, f1, amount, scale=4):
         m.blend_in = m.blend_out = 3
 
 a, b = SHOTS['totale']
-cam1, t1 = camera('1_Totale', 32, [(a, (-3.5, -78, 2.0)), (b, (-2.5, -71, 5.0))],
-                  [(a, (0, 0, 5.5)), (b, (0, 0, 5.0))], a, b, 4.0, [(a, 75)])
+# Schnelle Kranfahrt: tief und weit weg → hoch und 20 m näher am Tor
+cam1, t1 = camera('1_Totale', 35, [(a, (-4.0, -80, 1.2)), (b, (-2.0, -60, 6.0))],
+                  [(a, (0, 0, 6.0)), (b, (0, 0, 4.5))], a, b, 4.0, [(a, 80), (b, 60)])
 
 a, b = SHOTS['fahrt']
 cam2, t2 = camera('2_Fahrt', 22, [(a, (-1.5, -52, 1.6)), (a + 60, (0.2, -27, 2.4)), (b, (0.6, -17.5, 2.8))],
@@ -778,7 +790,13 @@ ee.volumetric_light_clamp = 0
 ee.use_raytracing = False
 scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Punchy'
-scene.view_settings.exposure = 0.3
+# Belichtung je Einstellung: Anfang heller, ab der Nah-Einstellung wie bisher (Sprünge liegen auf den Schnitten)
+for f, ev in ((1, 1.0), (SHOTS['fahrt'][0], 0.6), (SHOTS['nah'][0], 0.3)):
+    scene.view_settings.exposure = ev
+    scene.view_settings.keyframe_insert('exposure', frame=f)
+for fc in action_fcurves(scene):
+    for kp in fc.keyframe_points:
+        kp.interpolation = 'CONSTANT'
 
 # Leuchten (Bloom) über den Compositor
 comp = bpy.data.node_groups.new('Nachbearbeitung', 'CompositorNodeTree')
